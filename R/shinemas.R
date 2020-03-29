@@ -1,20 +1,23 @@
-#' Query SHiNeMaS and format data for specific R packages
+#' Query the database SHiNeMaS throught an API and format data for specific R packages
 #'
 #' @description
-#' \code{shinemas} queries SHiNeMaS and formats data for specific R packages
+#' \code{shinemas} queries the database SHiNeMaS throught an API and formats data for specific R packages
 #' 
-#' @param db url of the database
+#' @param db_url url of the database
 #' 
-#' @param id id to connect to the database
+#' @param user user name
 #' 
-#' @param pwd password to connect to the database
+#' @param password password
+#' 
+#' @param token token to connect to the database
+#' 
 #' 
 #' @param query_type name of the query. Possible values are
 #' \itemize{
-#'  \item PPBstats_data_network_unipart_seed_lot
+#'  \item PPBstats_data_network_unipart_seed_lots
 #'  \item PPBstats_data_agro
-#'  \item PPBstats_data_SR
-#'  \item PPBstats_data_HA
+#'  \item PPBstats_data_agro_SR
+#'  \item PPBstats_data_agro_HA
 #' }
 #' 
 #' @param specie filter: specie to keep
@@ -37,38 +40,53 @@
 #' The function return a dataframe formated for specific query type and packages
 #'  
 #' @details 
-#' The database SHiNeMaS (Seed History and Network Management System) is available here: \url{https://sourcesup.renater.fr/frs/?group_id=2295}
-#' 
-#' The query is based on a webservice ... TO COMPLETE
-#' 
-#' The query_type is under the format [package-name]_[query-name].
-#' For example PPBstats_data_agro stands for data_agro format for package PPBstats.
-#' 
-#' PPBstats is an  R package for Participatory Plant Breeding statisticial analyses. 
-#' More information are available here: \url{https://priviere.github.io/PPBstats_web_site/}
+#' \itemize{
+#'  \item \strong{SHiNeMaS}: The database SHiNeMaS (Seed History and Network Management System) is available here: \url{https://sourcesup.renater.fr/frs/?group_id=2295}.
+#'  The query is based on a webservice developped within SHiNeMaS v2 by Laetitia Courgey and Yannick de Oliviera.
+#'  The token can be taken through the web interface of SHiNeMaS by cliking "Get Token" on the top left side of the page.
+#'  \item \strong{query_type}: The query_type is under the format [package-name]_[query-name].
+#'  For example PPBstats_data_agro stands for data_agro format for package PPBstats.
+#'  \item \strong{Package supported}:
+#'  \itemize{
+#'   \item \pkg{PPBstats}: PPBstats is an  R package for Participatory Plant Breeding statisticial analyses.
+#'   More information are available here: \url{https://priviere.github.io/PPBstats_web_site/}
+#'   \itemize{
+#'    \item For query_type = data_agro and data_agro_HA 
+#'     \itemize{
+#'     \item filter year refers to sown year of seed-lot parent or year of selection of seed-lot parent
+#'     \item relation_type is either reproduction or selection
+#'     }
+#'   }
+#'  }
+#' }
 #' 
 #' @examples 
 #' \dontrun{
-#' data_agro = shinemas(
-#' db = "shinemas.local.seed",
-#' id = "user",
-#' pwd = "toto",
-#' query = "PPBstats_data_agro"
+#' data_agro = shinemas2R::shinemas(
+#'   db_url = "shinemas.local.seed",
+#'   user = "wheat",
+#'   password = "ppb",
+#'   token = "1234",
+#'   query_type = "PPBstats_data_agro"
 #' )
 #' 
 #' library(PPBstats)
 #' data = format_data_PPBstats(data_agro, type = "data_agro")
 #' }
 #' 
-#' @author Pierre Riviere and Laetitia Courgey
+#' @author Pierre Riviere
+#' 
+#' @import httr
+#' @import jsonlite
 #' 
 #' @export
 #' 
 shinemas = function(
-  db = "shinemas.local.seed",
-  id = "user",
-  pwd = "toto",
-  query_type = "data_agro",
+  db_url = "shinemas.local.seed",
+  user = "wheat",
+  password = "ppb",
+  token = "1234",
+  query_type = "PPBstats_data_agro",
   specie = NULL,
   project = NULL,
   variable = NULL,
@@ -78,30 +96,76 @@ shinemas = function(
   location = NULL,
   year = NULL
   ){
+  
   match.arg(query_type, c(
-    "PPBstats_data_network_unipart_seed_lot", 
+    "PPBstats_data_network_unipart_seed_lots", 
     "PPBstats_data_agro", 
     "PPBstats_data_SR", 
     "PPBstats_data_HA")
     )
   
-  if( query_type == "PPBstats_data_network_unipart_seed_lot"){
+  get_data_from_shinemas = function(db_url, user, password, token, query){
+    url_shinemas = paste(db_url, "/wsR/",query,"?token=", token, sep = "")
+    data_shinemas = httr::GET(url_shinemas, authenticate(user, password))
+    data = jsonlite::fromJSON(data_shinemas) 
+    return(data)
+    }
+  
+  # query_type == "PPBstats_data_network_unipart_seed_lots" ----------
+  if( query_type == "PPBstats_data_network_unipart_seed_lots"){
+    
+    data = get_data_from_shinemas(db_url, user, password, token, query = "data_network_unipart_seed_lots")
+    
+    vec_fac = c("specie", "project", "seed_lot_parent", "seed_lot_child", "relation_type", "relation_year_start", "relation_year_end", "germplasm_parent", 
+                "location_parent", "year_parent", "germplasm_child", "location_child", "year_child", "species_parent", "project_parent", "germplasm_type_parent", 
+                "comments_parent", "species_child", "project_child", "germplasm_type_child", "comments_child")
+    for(v in vec_fac){ data[v] = as.factor(as.character(v)) }
+    
+    vec_num = c("long_parent", "lat_parent", "long_child", "lat_child", 
+                "alt_parent", "total_generation_nb_parent", "local_generation_nb_parent", "generation_confidence_parent", 
+                "alt_child", "total_generation_nb_chill", "local_generation_nb_child", "generation_confidence_child")
+    for(v in vec_num){ data[v] = as.numeric(as.character(v)) }
     
   }
   
+  # query_type == "PPBstats_data_agro" ----------
   if( query_type == "PPBstats_data_agro"){
     
-  }
-  
-  if( query_type == "PPBstats_data_SR"){
+    data = get_data_from_shinemas(db_url, user, password, token, query = "data_agro")
+    
+    vec_fac = c("specie", "project", "seed_lot", "location", "year", "germplasm", "block", "X", "Y")
+    for(v in vec_fac){ data[v] = as.factor(as.character(v)) }
+    
+    vec_num = c("lat", "long")
+    for(v in vec_num){ data[v] = as.numeric(as.character(v)) }
     
   }
   
-  if( query_type == "PPBstats_data_HA"){
+  # query_type == "PPBstats_data_SR" ----------
+  if( query_type == "PPBstats_data_agro_SR"){
+    
+    data = get_data_from_shinemas(db_url, user, password, token, query = "data_agro_SR")
+    
+    vec_fac = c("specie", "project", "seed_lot", "location", "year", "germplasm", "block", "X", "Y", "expe_id", "group", "version")
+    for(v in vec_fac){ data[v] = as.factor(as.character(v)) }
+    
+    vec_num = c("lat", "long")
+    for(v in vec_num){ data[v] = as.numeric(as.character(v)) }
     
   }
   
-  data = NULL
+  # query_type == "PPBstats_data_HA" ----------
+  if( query_type == "PPBstats_data_agro_HA"){
     
+    data = get_data_from_shinemas(db_url, user, password, token, query = "data_agro_HA")
+    
+    vec_fac = c("specie", "project", "seed_lot", "location", "year", "germplasm", "block", "X", "Y", "origin", "version")
+    for(v in vec_fac){ data[v] = as.factor(as.character(v)) }
+    
+    vec_num = c("lat", "long")
+    for(v in vec_num){ data[v] = as.numeric(as.character(v)) }
+    
+  }
+  
   return(data)
 }

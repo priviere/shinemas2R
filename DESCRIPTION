@@ -1,22 +1,23 @@
 Package: shinemas2R
 Type: Package
-Title: An R package to query the database SHiNeMaS
+Title: A R package to query the database SHiNeMaS
 Version: 0.1
 Encoding: UTF-8
-Date: 2019-07-22
+Date: 2020-03-29
 Authors@R: c(
-    person("Pierre", "Riviere", role = c("aut", "cre"), email = "pierre@semencespaysannes.org"),
-    person("Laetitia", "Courgey", role = "ctb")
+    person("Pierre", "Riviere", role = c("aut", "cre"), email = "pierre@semencespaysannes.org")
     )
-Author: Pierre Riviere and Laetitia Courgey
-Maintainer: Pierre Riviere <pierre@semencespaysannes.org>
-Description: This package queries the database SHiNeMaS and format data for specific R packages.
+Author: Pierre Riviere
+Maintainer: Pierre Riviere <pamriviere@protonmail.com>
+Description: This package queries the database SHiNeMaS and formats data for specific R packages.
 License: GPL-3
 URL: http://github.com/priviere/shinemas2R
 BugReports: http://github.com/priviere/shinemas2R/issues
 LazyLoad: yes
 LazyData: true
-VignetteBuilder: knitr
 RoxygenNote: 6.1.1
+Depends:
+  httr,
+  jsonlite
 Suggest:
   PPBstats
