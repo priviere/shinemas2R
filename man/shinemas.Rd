@@ -2,26 +2,29 @@
 % Please edit documentation in R/shinemas.R
 \name{shinemas}
 \alias{shinemas}
-\title{Query SHiNeMaS and format data for specific R packages}
+\title{Query the database SHiNeMaS throught an API and format data for specific R packages}
 \usage{
-shinemas(db = "shinemas.local.seed", id = "user", pwd = "toto",
-  query_type = "data_agro", specie = NULL, project = NULL,
+shinemas(db_url = "shinemas.local.seed", user = "wheat",
+  password = "ppb", token = "1234",
+  query_type = "PPBstats_data_agro", specie = NULL, project = NULL,
   variable = NULL, germplasm = NULL, germplasm_type = NULL,
   relation_type = NULL, location = NULL, year = NULL)
 }
 \arguments{
-\item{db}{url of the database}
+\item{db_url}{url of the database}
 
-\item{id}{id to connect to the database}
+\item{user}{user name}
 
-\item{pwd}{password to connect to the database}
+\item{password}{password}
+
+\item{token}{token to connect to the database}
 
 \item{query_type}{name of the query. Possible values are
 \itemize{
- \item PPBstats_data_network_unipart_seed_lot
+ \item PPBstats_data_network_unipart_seed_lots
  \item PPBstats_data_agro
- \item PPBstats_data_SR
- \item PPBstats_data_HA
+ \item PPBstats_data_agro_SR
+ \item PPBstats_data_agro_HA
 }}
 
 \item{specie}{filter: specie to keep}
@@ -44,26 +47,37 @@ shinemas(db = "shinemas.local.seed", id = "user", pwd = "toto",
 The function return a dataframe formated for specific query type and packages
 }
 \description{
-\code{shinemas} queries SHiNeMaS and formats data for specific R packages
+\code{shinemas} queries the database SHiNeMaS throught an API and formats data for specific R packages
 }
 \details{
-The database SHiNeMaS (Seed History and Network Management System) is available here: \url{https://sourcesup.renater.fr/frs/?group_id=2295}
-
-The query is based on a webservice ... TO COMPLETE
-
-The query_type is under the format [package-name]_[query-name].
-For example PPBstats_data_agro stands for data_agro format for package PPBstats.
-
-PPBstats is an  R package for Participatory Plant Breeding statisticial analyses. 
-More information are available here: \url{https://priviere.github.io/PPBstats_web_site/}
+\itemize{
+ \item \strong{SHiNeMaS}: The database SHiNeMaS (Seed History and Network Management System) is available here: \url{https://sourcesup.renater.fr/frs/?group_id=2295}.
+ The query is based on a webservice developped within SHiNeMaS v2 by Laetitia Courgey and Yannick de Oliviera.
+ The token can be taken through the web interface of SHiNeMaS by cliking "Get Token" on the top left side of the page.
+ \item \strong{query_type}: The query_type is under the format [package-name]_[query-name].
+ For example PPBstats_data_agro stands for data_agro format for package PPBstats.
+ \item \strong{Package supported}:
+ \itemize{
+  \item \pkg{PPBstats}: PPBstats is an  R package for Participatory Plant Breeding statisticial analyses.
+  More information are available here: \url{https://priviere.github.io/PPBstats_web_site/}
+  \itemize{
+   \item For query_type = data_agro and data_agro_HA 
+    \itemize{
+    \item filter year refers to sown year of seed-lot parent or year of selection of seed-lot parent
+    \item relation_type is either reproduction or selection
+    }
+  }
+ }
+}
 }
 \examples{
 \dontrun{
-data_agro = shinemas(
-db = "shinemas.local.seed",
-id = "user",
-pwd = "toto",
-query = "PPBstats_data_agro"
+data_agro = shinemas2R::shinemas(
+  db_url = "shinemas.local.seed",
+  user = "wheat",
+  password = "ppb",
+  token = "1234",
+  query_type = "PPBstats_data_agro"
 )
 
 library(PPBstats)
@@ -72,5 +86,5 @@ data = format_data_PPBstats(data_agro, type = "data_agro")
 
 }
 \author{
-Pierre Riviere and Laetitia Courgey
+Pierre Riviere
 }
