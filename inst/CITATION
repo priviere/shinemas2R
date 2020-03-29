@@ -2,14 +2,14 @@ citHeader("To cite the shinemas2R package in publications use:")
 
 citEntry(
   entry = 'manual',
-  title = 'An R package to query the database SHiNeMaS. Version 0.1',
-  author = '{Pierre Riviere and Laetitia Courgey}',
-  organisation = '{Reseau Semences Paysannes}, {INRA}',
-  year = '2019',
+  title = 'A R package to query the database SHiNeMaS. Version 0.1',
+  author = '{Pierre Riviere}',
+  organisation = '{Mètis}',
+  year = '2020',
   url = 'https://github.com/priviere/shinemas2R',
   note = 'R code is under licence GPL-3.',
-  textVersion =   'Pierre Riviere and Laetitia Courgey, 2019,
-                  shinemas2R: An R package to query the database SHiNeMaS.
+  textVersion =   'Pierre Riviere, 2020,
+                  shinemas2R: A R package to query the database SHiNeMaS.
                   Version 0.1,
                   URL: https://github.com/priviere/shinemas2R'
                   )
