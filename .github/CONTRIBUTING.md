@@ -1,6 +1,6 @@
 # Contribute to shinemas2R
 
-If you want to interact with us, please file an [issue]() or send me an email : pamriviere@protonmail.com
+If you want to interact with us, please file an [issue](http://github.com/priviere/shinemas2R/issues) or send me an email : pamriviere@protonmail.com
 
 
 `shinemas2R` is based on the webservice API developped in SHiNeMaS.
@@ -16,6 +16,7 @@ TO DO
 
 ## Update the code of the function `shinemas` 
 
+- Create an [issue](http://github.com/priviere/shinemas2R/issues) to describe what you'd like to do
 - Fork the git repository
 - Update the function `shinemas` in your fork:
   - add a `query_type`
