@@ -12,7 +12,7 @@ In order to implement new queries you need:
 
 ## Update the API in SHiNeMaS code
 
-TO DO
+If you want to contribute to SHiNeMaS API or core code source please contact [ABI-Soft](http://moulon.inrae.fr/equipes_transversales/abi/abisoft/) team.
 
 ## Update the code of the function `shinemas` 
 

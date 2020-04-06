@@ -150,10 +150,12 @@
     <tr>
       <th>query_type</th>
       <td><p>name of the query. Possible values are</p><ul>
+<li><p>PPBstats</p><ul>
 <li><p>PPBstats_data_network_unipart_seed_lots</p></li>
 <li><p>PPBstats_data_agro</p></li>
 <li><p>PPBstats_data_agro_SR</p></li>
 <li><p>PPBstats_data_agro_HA</p></li>
+</ul></li>
 </ul></td>
     </tr>
     <tr>
@@ -192,21 +194,21 @@
     
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>The function return a dataframe formated for specific query type and packages</p>
+    <p>The function returns a dataframe formated for specific query type and packages</p>
     
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
     
 <ul>
 <li><p><strong>SHiNeMaS</strong>: The database SHiNeMaS (Seed History and Network Management System) is available here: <a href='https://sourcesup.renater.fr/frs/?group_id=2295'>https://sourcesup.renater.fr/frs/?group_id=2295</a>.
- The query is based on a webservice developped within SHiNeMaS v2 by Laetitia Courgey and Yannick de Oliviera.
+ The query is based on a webservice developped within SHiNeMaS v2 by Laetitia Courgey and Yannick de Oliveira.
  The token can be taken through the web interface of SHiNeMaS by cliking "Get Token" on the top left side of the page.</p></li>
 <li><p><strong>query_type</strong>: The query_type is under the format [package-name]_[query-name].
  For example PPBstats_data_agro stands for data_agro format for package PPBstats.</p></li>
 <li><p><strong>Package supported</strong>:</p><ul>
-<li><p><span class="pkg">PPBstats</span>: PPBstats is an  R package for Participatory Plant Breeding statisticial analyses.
-  More information are available here: <a href='https://priviere.github.io/PPBstats_web_site/'>https://priviere.github.io/PPBstats_web_site/</a></p><ul>
-<li><p>For query_type = data_agro and data_agro_HA</p><ul>
+<li><p>See <a href='https://priviere.github.io/shinemas2R/#packages-supported'>https://priviere.github.io/shinemas2R/#packages-supported</a> for more details</p></li>
+<li><p>PPBstats</p><ul>
+<li><p>For query_type = PPBstats_data_agro and PPBstats_data_agro_HA</p><ul>
 <li><p>filter year refers to sown year of seed-lot parent or year of selection of seed-lot parent</p></li>
 <li><p>relation_type is either reproduction or selection</p></li>
 </ul></li>

@@ -14,7 +14,7 @@ devtools::install_github("priviere/shinemas2R")
 ## Usage
 
 `shinemas2R` has one function `shinemas()` which queries SHiNeMaS and formats data for specific R packages.
-The query is based on a webservice developped within SHiNeMaS v2 by Laetitia Courgey and Yannick de Oliviera. 
+The query is based on a webservice developped within SHiNeMaS v2 by Laetitia Courgey and Yannick de Oliveira from [ABI-Soft](http://moulon.inrae.fr/equipes_transversales/abi/abisoft/) team at GQE-Le Moulon.
 The following information are needed to connect to the database:  db_url, user, password and token.
 The token can be taken through the web interface of SHiNeMaS by cliking "Get Token" on the top left side of the page.
 

@@ -21,10 +21,13 @@ shinemas(db_url = "shinemas.local.seed", user = "wheat",
 
 \item{query_type}{name of the query. Possible values are
 \itemize{
- \item PPBstats_data_network_unipart_seed_lots
- \item PPBstats_data_agro
- \item PPBstats_data_agro_SR
- \item PPBstats_data_agro_HA
+ \item PPBstats
+ \itemize{
+  \item PPBstats_data_network_unipart_seed_lots
+  \item PPBstats_data_agro
+  \item PPBstats_data_agro_SR
+  \item PPBstats_data_agro_HA
+  }
 }}
 
 \item{specie}{filter: specie to keep}
@@ -44,7 +47,7 @@ shinemas(db_url = "shinemas.local.seed", user = "wheat",
 \item{year}{filter: year to keep}
 }
 \value{
-The function return a dataframe formated for specific query type and packages
+The function returns a dataframe formated for specific query type and packages
 }
 \description{
 \code{shinemas} queries the database SHiNeMaS throught an API and formats data for specific R packages
@@ -52,20 +55,20 @@ The function return a dataframe formated for specific query type and packages
 \details{
 \itemize{
  \item \strong{SHiNeMaS}: The database SHiNeMaS (Seed History and Network Management System) is available here: \url{https://sourcesup.renater.fr/frs/?group_id=2295}.
- The query is based on a webservice developped within SHiNeMaS v2 by Laetitia Courgey and Yannick de Oliviera.
+ The query is based on a webservice developped within SHiNeMaS v2 by Laetitia Courgey and Yannick de Oliveira.
  The token can be taken through the web interface of SHiNeMaS by cliking "Get Token" on the top left side of the page.
  \item \strong{query_type}: The query_type is under the format [package-name]_[query-name].
  For example PPBstats_data_agro stands for data_agro format for package PPBstats.
  \item \strong{Package supported}:
  \itemize{
-  \item \pkg{PPBstats}: PPBstats is an  R package for Participatory Plant Breeding statisticial analyses.
-  More information are available here: \url{https://priviere.github.io/PPBstats_web_site/}
+  \item See \url{https://priviere.github.io/shinemas2R/#packages-supported} for more details
+  \item PPBstats
   \itemize{
-   \item For query_type = data_agro and data_agro_HA 
+   \item For query_type = PPBstats_data_agro and PPBstats_data_agro_HA 
     \itemize{
     \item filter year refers to sown year of seed-lot parent or year of selection of seed-lot parent
     \item relation_type is either reproduction or selection
-    }
+   }
   }
  }
 }
