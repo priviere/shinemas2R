@@ -2,8 +2,6 @@
 
 `shinemas2R` is a R package that  queries the database SHiNeMaS ([Seeds History and Network Management System](https://sourcesup.renater.fr/frs/?group_id=2295)) and format data for specific R packages.
 
-Note that an old verson of shinemas2R code is [here](https://github.com/priviere/shinemas2R_deprecated)
-
 ## Install
 
 ```r
