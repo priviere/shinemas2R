@@ -139,6 +139,7 @@ shinemas = function(
     }
     data <- jsonlite::fromJSON(httr::content(data_shinemas, as = "text"), flatten = T)
     
+    Date <- data_shinemas$date
     if(status_code(data_shinemas) != 200){warning("There was something wrong with the query"); return(data)}
     
     # If several pages, request all pages
@@ -163,6 +164,7 @@ shinemas = function(
       info <- lapply(data, function(d){return(d$information)})
     }
     d <- do.call(rbind.fill, D)
+    info <- c(list("date" = Date, "filters" = Filters), list("info" = info))
     
     return(list("data" = d, "information" = info))
     }
