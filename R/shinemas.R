@@ -104,8 +104,8 @@ shinemas = function(
   match.arg(query_type, c(
     "PPBstats_data_network_unipart_seed_lots", 
     "PPBstats_data_agro", 
-    "PPBstats_data_SR", 
-    "PPBstats_data_HA")
+    "PPBstats_data_agro_SR", 
+    "PPBstats_data_agro_HA")
     )
   
   filters <- list("specie" = specie,
