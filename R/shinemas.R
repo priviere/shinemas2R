@@ -117,7 +117,7 @@ shinemas = function(
                   "location" = location,
                   "year" = year)
   
-  get_data_from_shinemas = function(db_url, user, password, token, query){
+  get_data_from_shinemas = function(db_url, user, password, token, query, filters){
     url_shinemas = paste(db_url, "/wsR/",query,"?token=", token, sep = "")
     
     # Set filters
@@ -191,7 +191,9 @@ shinemas = function(
     
     data = get_data_from_shinemas(db_url, user, password, token, query = "data_agro", filters)
     
-    vec_fac = c("species", "project", "seed_lot_child", "seed_lot_parent", "location", "year", "germplasm", "block", "X", "Y")
+    colnames(data$data)[grep("seed_lot_child", colnames(data$data))] <- "seed_lot"
+    
+    vec_fac = c("species", "project", "seed_lot", "seed_lot_parent", "location", "year", "germplasm", "block", "X", "Y")
     for(v in vec_fac){ data$data[,v] = as.factor(as.character(data$data[,v])) }
     
     if(FALSE){ ## Pas dans les noms de colonne
