@@ -107,30 +107,20 @@ shinemas = function(
     "PPBstats_data_agro_SR", 
     "PPBstats_data_agro_HA")
     )
+  # Set filters
+  filters <- list()
+  if(!is.null(specie)){Filters <- c(filters, "species"=paste("[",paste(specie,collapse="|"),"]",sep=""))}
+  if(!is.null(project)){Filters <- c(filters, "project"=paste("[",paste(project,collapse="|"),"]",sep=""))}
+  if(!is.null(variable)){Filters <- c(filters, "variables"=paste("[",paste(variable,collapse="|"),"]",sep=""))}
+  if(!is.null(germplasm)){Filters <- c(filters, "germplasm"=paste("[",paste(germplasm,collapse="|"),"]",sep=""))}
+  if(!is.null(germplasm_type)){Filters <- c(filters, "germplasm_type"=paste("[",paste(germplasm_type,collapse="|"),"]",sep=""))}
+  if(!is.null(relation_type)){Filters <- c(filters, "relation_type"=paste("[",paste(relation_type,collapse="|"),"]",sep=""))}
+  if(!is.null(location)){Filters <- c(filters, "location"=paste("[",paste(location,collapse="|"),"]",sep=""))}
+  if(!is.null(year)){Filters <- c(filters, "event_year"=paste("[",paste(year,collapse="|"),"]",sep=""))}
   
-  filters <- list("specie" = paste(specie,collapse="|"),
-                  "project" = paste(project,collapse="|"),
-                  "variable" = paste(variables,collapse="|"),
-                  "germplasm" = paste(germplasm,collapse="|"),
-                  "germplasm_type" = paste(germplasm_type,collapse="|"),
-                  "relation_type" = paste(relation_type,collapse="|"),
-                  "location" = paste(location,collapse="|"),
-                  "year" = paste(year,collapse="|")
-              )
   
   get_data_from_shinemas = function(db_url, user, password, token, query, filters){
     url_shinemas = paste(db_url, "/wsR/",query,"?token=", token, sep = "")
-    
-    # Set filters
-    Filters <- list()
-    if(!is.null(filters$specie)){Filters <- c(Filters, "species"=paste("[",filters$specie,"]",sep=""))}
-    if(!is.null(filters$project)){Filters <- c(Filters, "project"=paste("[",filters$project,"]",sep=""))}
-    if(!is.null(filters$variable)){Filters <- c(Filters, "variables"=paste("[",filters$variable,"]",sep=""))}
-    if(!is.null(filters$germplasm)){Filters <- c(Filters, "germplasm"=paste("[",filters$germplasm,"]",sep=""))}
-    if(!is.null(filters$germplasm_type)){Filters <- c(Filters, "germplasm_type"=paste("[",filters$germplasm_type,"]",sep=""))}
-    if(!is.null(filters$relation_type)){Filters <- c(Filters, "relation_type"=paste("[",filters$relation_type,"]",sep=""))}
-    if(!is.null(filters$location)){Filters <- c(Filters, "location"=paste("[",filters$location,"]",sep=""))}
-    if(!is.null(filters$event_year)){Filters <- c(Filters, "event_year"=paste("[",filters$event_year,"]",sep=""))}
     
     # Get data
     if(length(Filters) > 0){
@@ -139,9 +129,27 @@ shinemas = function(
       data_shinemas <- httr::GET(url_shinemas, authenticate(user, password))
     }
     data <- jsonlite::fromJSON(httr::content(data_shinemas, as = "text"), flatten = T)
-    
-    d <- as_data_frame(data$data)
-    
+
+    # Format data as a unnested dataframe
+    d <- as_tibble(data$data)
+    vec_columns <- c("species","projects","seed_lot_child","germplasm","seed_lot_parent","type","year","location","block","X","Y")
+    D <-  d[,vec_columns]
+    for(VAR in variable){
+      t <- d[,c(vec_columns, colnames(d)[grep(strsplit(VAR,"[$]")[[1]][1], colnames(d))])]
+      t <- unnest(t, cols = colnames(t)[grep(strsplit(VAR,"[$]")[[1]][1], colnames(t))])
+      
+      # Get all methods for an individual in one line
+      t <- split(t, f=t$method)
+      t <- lapply(t, function(x){
+        colnames(x)[grep(paste("date","value",sep="|"), colnames(x))] = paste(colnames(x)[grep(paste("date","value",sep="|"), colnames(x))], unique(x$method),sep="---")
+        x <- x[,-grep("method",colnames(x))]
+        return(x)
+      })
+      
+      # Merge values of different methods
+      a <- Reduce(function(...) merge(..., all=T), t)
+      D <- merge(D,a, all=T)
+    }
      
      
     Date <- data_shinemas$date
@@ -211,7 +219,7 @@ shinemas = function(
   # query_type == "PPBstats_data_SR" ----------
   if( query_type == "PPBstats_data_agro_SR"){
     
-    data = get_data_from_shinemas(db_url, user, password, token, query = "data_agro_SR", filters)
+    data = get_data_from_shinemas(db_url, user, password, token, query = "data_agro_sr", filters)
     
     vec_fac = c("specie", "project", "seed_lot", "location", "year", "germplasm", "block", "X", "Y", "expe_id", "group", "version")
     for(v in vec_fac){ data$data[,v] = as.factor(as.character(data$data[,v])) }
@@ -224,7 +232,7 @@ shinemas = function(
   # query_type == "PPBstats_data_HA" ----------
   if( query_type == "PPBstats_data_agro_HA"){
     
-    data = get_data_from_shinemas(db_url, user, password, token, query = "data_agro_HA", filters)
+    data = get_data_from_shinemas(db_url, user, password, token, query = "data_agro_ha", filters)
     
     vec_fac = c("specie", "project", "seed_lot", "location", "year", "germplasm", "block", "X", "Y", "origin", "version")
     for(v in vec_fac){ data$data[,v] = as.factor(as.character(data$data[,v])) }
