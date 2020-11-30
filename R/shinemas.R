@@ -23,21 +23,21 @@
 #'   }
 #' }
 #' 
-#' @param specie filter: specie to keep
+#' @param specie filter: a vector of species to keep
 #' 
-#' @param project filter: project to keep
+#' @param project filter: a vector of projects to keep
 #' 
-#' @param variable filter: variable to keep
+#' @param variable filter: a vector of variables to keep. Each element must be of the form "name$type", type being the type of variable as designated in ShiNeMaS
 #' 
-#' @param germplasm filter: germplasm to keep
+#' @param germplasm filter: a vector of germplasms to keep
 #' 
-#' @param germplasm_type filter: germplasm type to keep
+#' @param germplasm_type filter: a vector of germplasm types to keep
 #' 
-#' @param relation_type filter: relation type to keep
+#' @param relation_type filter: a vector of relation types to keep
 #' 
-#' @param location filter: location to keep
+#' @param location filter: a vector of locations to keep
 #' 
-#' @param year filter: year to keep
+#' @param year filter: a vector of years to keep
 #' 
 #' @return 
 #' The function returns a dataframe formated for specific query type and packages
@@ -93,7 +93,7 @@ shinemas = function(
   query_type = "PPBstats_data_agro",
   specie = NULL,
   project = NULL,
-  variable = NULL,
+  variables = NULL,
   germplasm = NULL,
   germplasm_type = NULL,
   relation_type = NULL,
@@ -108,14 +108,15 @@ shinemas = function(
     "PPBstats_data_agro_HA")
     )
   
-  filters <- list("specie" = specie,
-                  "project" = project,
-                  "variable" = variable,
-                  "germplasm" = germplasm,
-                  "germplasm_type" = germplasm_type,
-                  "relation_type" = relation_type,
-                  "location" = location,
-                  "year" = year)
+  filters <- list("specie" = paste(specie,collapse="|"),
+                  "project" = paste(project,collapse="|"),
+                  "variable" = paste(variables,collapse="|"),
+                  "germplasm" = paste(germplasm,collapse="|"),
+                  "germplasm_type" = paste(germplasm_type,collapse="|"),
+                  "relation_type" = paste(relation_type,collapse="|"),
+                  "location" = paste(location,collapse="|"),
+                  "year" = paste(year,collapse="|")
+              )
   
   get_data_from_shinemas = function(db_url, user, password, token, query, filters){
     url_shinemas = paste(db_url, "/wsR/",query,"?token=", token, sep = "")
@@ -124,7 +125,7 @@ shinemas = function(
     Filters <- list()
     if(!is.null(filters$specie)){Filters <- c(Filters, "species"=paste("[",filters$specie,"]",sep=""))}
     if(!is.null(filters$project)){Filters <- c(Filters, "project"=paste("[",filters$project,"]",sep=""))}
-    if(!is.null(filters$variable)){Filters <- c(Filters, "variable"=paste("[",filters$variable,"]",sep=""))}
+    if(!is.null(filters$variable)){Filters <- c(Filters, "variables"=paste("[",filters$variable,"]",sep=""))}
     if(!is.null(filters$germplasm)){Filters <- c(Filters, "germplasm"=paste("[",filters$germplasm,"]",sep=""))}
     if(!is.null(filters$germplasm_type)){Filters <- c(Filters, "germplasm_type"=paste("[",filters$germplasm_type,"]",sep=""))}
     if(!is.null(filters$relation_type)){Filters <- c(Filters, "relation_type"=paste("[",filters$relation_type,"]",sep=""))}
@@ -139,6 +140,10 @@ shinemas = function(
     }
     data <- jsonlite::fromJSON(httr::content(data_shinemas, as = "text"), flatten = T)
     
+    d <- as_data_frame(data$data)
+    
+     
+     
     Date <- data_shinemas$date
     if(status_code(data_shinemas) != 200){warning("There was something wrong with the query"); return(data)}
     
