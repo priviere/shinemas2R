@@ -109,40 +109,31 @@ shinemas = function(
     )
   # Set filters
   filters <- list()
-  if(!is.null(specie)){filters <- c(filters, "species"=paste("[",paste(specie,collapse="|"),"]",sep=""))}
-  if(!is.null(project)){filters <- c(filters, "project"=paste("[",paste(project,collapse="|"),"]",sep=""))}
-  if(!is.null(variable)){filters <- c(filters, "variables"=paste("[",paste(variable,collapse="|"),"]",sep=""))}
-  if(!is.null(germplasm)){filters <- c(filters, "germplasm"=paste("[",paste(germplasm,collapse="|"),"]",sep=""))}
-  if(!is.null(germplasm_type)){filters <- c(filters, "germplasm_type"=paste("[",paste(germplasm_type,collapse="|"),"]",sep=""))}
-  if(!is.null(relation_type)){filters <- c(filters, "relation_type"=paste("[",paste(relation_type,collapse="|"),"]",sep=""))}
-  if(!is.null(location)){filters <- c(filters, "location"=paste("[",paste(location,collapse="|"),"]",sep=""))}
-  if(!is.null(year)){filters <- c(filters, "event_year"=paste("[",paste(year,collapse="|"),"]",sep=""))}
+  if(!is.null(specie)){filters <- c(filters, "species"=paste("[",paste(specie,collapse=","),"]",sep=""))}
+  if(!is.null(project)){filters <- c(filters, "project"=paste("[",paste(project,collapse=","),"]",sep=""))}
+  if(!is.null(variable)){filters <- c(filters, "variables"=paste("[",paste(variable,collapse=","),"]",sep=""))}
+  if(!is.null(germplasm)){filters <- c(filters, "germplasm"=paste("[",paste(germplasm,collapse=","),"]",sep=""))}
+  if(!is.null(germplasm_type)){filters <- c(filters, "germplasm_type"=paste("[",paste(germplasm_type,collapse=","),"]",sep=""))}
+  if(!is.null(relation_type)){filters <- c(filters, "relation_type"=paste("[",paste(relation_type,collapse=","),"]",sep=""))}
+  if(!is.null(location)){filters <- c(filters, "location"=paste("[",paste(location,collapse=","),"]",sep=""))}
+  if(!is.null(year)){filters <- c(filters, "event_year"=paste("[",paste(year,collapse=","),"]",sep=""))}
   
   
-  get_data_from_shinemas = function(db_url, user, password, token, query, filters){
-    url_shinemas = paste(db_url, "/wsR/",query,"?token=", token, sep = "")
-    
-    # Get data
-    if(length(Filters) > 0){
-      data_shinemas <- httr::GET(url_shinemas, authenticate(user, password), query = Filters)
-    }else{
-      data_shinemas <- httr::GET(url_shinemas, authenticate(user, password))
-    }
-    data <- jsonlite::fromJSON(httr::content(data_shinemas, as = "text"), flatten = T)
-
+  format_data_shinemas <- function(data){
     # Format data as a unnested dataframe
     d <- as_tibble(data$data)
     vec_columns <- c("species","projects","seed_lot_child","germplasm","seed_lot_parent","type","year","location","block","X","Y")
     D <-  d[,vec_columns]
-    variables <- grep("[$]", colnames(d))
-    for(VAR in variable){
-      t <- d[,c(vec_columns, colnames(d)[grep(strsplit(VAR,"[$]")[[1]][1], colnames(d))])]
-      t <- unnest(t, cols = colnames(t)[grep(strsplit(VAR,"[$]")[[1]][1], colnames(t))])
+    variables <- grep("raw_data", colnames(d))
+    for(i in variables){
+      t <- d[,c(vec_columns, colnames(d)[i])]
+      VAR <- strsplit(colnames(d)[i],"[.]")[[1]][2]
+      t <- unnest(t, cols = colnames(t)[ncol(t)])
       
       # Get all methods for an individual in one line
       t <- split(t, f=t$method)
       t <- lapply(t, function(x){
-        colnames(x)[grep(paste("date","value",sep="|"), colnames(x))] = paste(colnames(x)[grep(paste("date","value",sep="|"), colnames(x))], unique(x$method),sep="---")
+        colnames(x)[grep(paste("date","value",sep="|"), colnames(x))] = paste(VAR, unique(x$method),colnames(x)[grep(paste("date","value",sep="|"), colnames(x))],sep=".")
         x <- x[,-grep("method",colnames(x))]
         return(x)
       })
@@ -151,20 +142,35 @@ shinemas = function(
       a <- Reduce(function(...) merge(..., all=T), t)
       D <- merge(D,a, all=T)
     }
-     
-     
+    return(D)
+  }
+  
+
+  get_data_from_shinemas = function(db_url, user, password, token, query, filters){
+    url_shinemas = paste(db_url, "/wsR/",query,"?token=", token, sep = "")
+    
+    # Get data
+    if(length(filters) > 0){
+      data_shinemas <- httr::GET(url_shinemas, authenticate(user, password), query = filters)
+    }else{
+      data_shinemas <- httr::GET(url_shinemas, authenticate(user, password))
+    }
+    data <- jsonlite::fromJSON(httr::content(data_shinemas, as = "text"), flatten = T)
+    d <- format_data_shinemas(data)
+
     Date <- data_shinemas$date
     if(status_code(data_shinemas) != 200){warning("There was something wrong with the query"); return(data)}
     
     # If several pages, request all pages
     if(data$information$nb_pages > 1){
       data <- lapply(1:data$information$nb_pages, function(i){
-        if(length(Filters) > 0){
-          data_shinemas <- httr::GET(paste(url_shinemas,"&page=",i,sep=""), authenticate(user, password), query = Filters)
+        if(length(filters) > 0){
+          data_shinemas <- httr::GET(paste(url_shinemas,"&page=",i,sep=""), authenticate(user, password), query = filters)
         }else{
           data_shinemas <- httr::GET(paste(url_shinemas,"&page=",i,sep=""), authenticate(user, password))
         }
         d <- jsonlite::fromJSON(httr::content(data_shinemas, as = "text"))
+        d <- format_data_shinemas(d)
         d$information <- c(d$information, list("Status" = status_code(data_shinemas)))
         return(d)
       })
@@ -178,9 +184,9 @@ shinemas = function(
       info <- lapply(data, function(d){return(d$information)})
     }
     d <- do.call(rbind.fill, D)
-    info <- c(list("date" = Date, "filters" = Filters), list("info" = info))
+    info <- c(list("date" = Date, "filters" = filters), list("info" = info))
     
-    return(list("data" = d, "information" = info))
+    return(list("data" = D, "information" = info))
     }
   
   # query_type == "PPBstats_data_network_unipart_seed_lots" ----------
