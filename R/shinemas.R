@@ -109,14 +109,14 @@ shinemas = function(
     )
   # Set filters
   filters <- list()
-  if(!is.null(specie)){Filters <- c(filters, "species"=paste("[",paste(specie,collapse="|"),"]",sep=""))}
-  if(!is.null(project)){Filters <- c(filters, "project"=paste("[",paste(project,collapse="|"),"]",sep=""))}
-  if(!is.null(variable)){Filters <- c(filters, "variables"=paste("[",paste(variable,collapse="|"),"]",sep=""))}
-  if(!is.null(germplasm)){Filters <- c(filters, "germplasm"=paste("[",paste(germplasm,collapse="|"),"]",sep=""))}
-  if(!is.null(germplasm_type)){Filters <- c(filters, "germplasm_type"=paste("[",paste(germplasm_type,collapse="|"),"]",sep=""))}
-  if(!is.null(relation_type)){Filters <- c(filters, "relation_type"=paste("[",paste(relation_type,collapse="|"),"]",sep=""))}
-  if(!is.null(location)){Filters <- c(filters, "location"=paste("[",paste(location,collapse="|"),"]",sep=""))}
-  if(!is.null(year)){Filters <- c(filters, "event_year"=paste("[",paste(year,collapse="|"),"]",sep=""))}
+  if(!is.null(specie)){filters <- c(filters, "species"=paste("[",paste(specie,collapse="|"),"]",sep=""))}
+  if(!is.null(project)){filters <- c(filters, "project"=paste("[",paste(project,collapse="|"),"]",sep=""))}
+  if(!is.null(variable)){filters <- c(filters, "variables"=paste("[",paste(variable,collapse="|"),"]",sep=""))}
+  if(!is.null(germplasm)){filters <- c(filters, "germplasm"=paste("[",paste(germplasm,collapse="|"),"]",sep=""))}
+  if(!is.null(germplasm_type)){filters <- c(filters, "germplasm_type"=paste("[",paste(germplasm_type,collapse="|"),"]",sep=""))}
+  if(!is.null(relation_type)){filters <- c(filters, "relation_type"=paste("[",paste(relation_type,collapse="|"),"]",sep=""))}
+  if(!is.null(location)){filters <- c(filters, "location"=paste("[",paste(location,collapse="|"),"]",sep=""))}
+  if(!is.null(year)){filters <- c(filters, "event_year"=paste("[",paste(year,collapse="|"),"]",sep=""))}
   
   
   get_data_from_shinemas = function(db_url, user, password, token, query, filters){
@@ -134,6 +134,7 @@ shinemas = function(
     d <- as_tibble(data$data)
     vec_columns <- c("species","projects","seed_lot_child","germplasm","seed_lot_parent","type","year","location","block","X","Y")
     D <-  d[,vec_columns]
+    variables <- grep("[$]", colnames(d))
     for(VAR in variable){
       t <- d[,c(vec_columns, colnames(d)[grep(strsplit(VAR,"[$]")[[1]][1], colnames(d))])]
       t <- unnest(t, cols = colnames(t)[grep(strsplit(VAR,"[$]")[[1]][1], colnames(t))])
