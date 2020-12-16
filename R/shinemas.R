@@ -27,7 +27,8 @@
 #' 
 #' @param project filter: a vector of projects to keep
 #' 
-#' @param variable filter: a vector of variables to keep. Each element must be of the form "name$type", type being the type of variable as designated in ShiNeMaS
+#' @param variable filter: a vector of variables to keep. 
+#' Each element must be of the form "name$type", name being the name of the variable in ShiNeMas and type being the type of variable as designated in ShiNeMaS
 #' 
 #' @param germplasm filter: a vector of germplasms to keep
 #' 
@@ -82,6 +83,7 @@
 #' @import httr
 #' @import jsonlite
 #' @import plyr
+#' @import tidyverse
 #' 
 #' @export
 #' 
@@ -107,6 +109,7 @@ shinemas = function(
     "PPBstats_data_agro_SR", 
     "PPBstats_data_agro_HA")
     )
+  
   # Set filters
   filters <- list()
   if(!is.null(specie)){filters <- c(filters, "species"=paste("[",paste(specie,collapse=","),"]",sep=""))}
@@ -119,6 +122,7 @@ shinemas = function(
   if(!is.null(year)){filters <- c(filters, "event_year"=paste("[",paste(year,collapse=","),"]",sep=""))}
   
   
+  # Functions
   format_data_shinemas <- function(data){
     # Format data as a unnested dataframe
     d <- as_tibble(data$data)
@@ -142,10 +146,15 @@ shinemas = function(
       a <- Reduce(function(...) merge(..., all=T), t)
       D <- merge(D,a, all=T)
     }
+    
+    # Delete row with empty variable value
+    to_get <- grep("value",colnames(D))
+    if(length(to_get) > 0){
+      D <- D %>% filter_at(vars(colnames(D)[to_get]),any_vars(!is.na(.)))
+    }
+    
     return(D)
   }
-  
-
   get_data_from_shinemas = function(db_url, user, password, token, query, filters){
     url_shinemas = paste(db_url, "/wsR/",query,"?token=", token, sep = "")
     
@@ -156,7 +165,7 @@ shinemas = function(
       data_shinemas <- httr::GET(url_shinemas, authenticate(user, password))
     }
     data <- jsonlite::fromJSON(httr::content(data_shinemas, as = "text"), flatten = T)
-    d <- format_data_shinemas(data)
+    if(query == "data_agro"){d <- format_data_shinemas(data)}
 
     Date <- data_shinemas$date
     if(status_code(data_shinemas) != 200){warning("There was something wrong with the query"); return(data)}
@@ -170,8 +179,8 @@ shinemas = function(
           data_shinemas <- httr::GET(paste(url_shinemas,"&page=",i,sep=""), authenticate(user, password))
         }
         d <- jsonlite::fromJSON(httr::content(data_shinemas, as = "text"))
-        d <- format_data_shinemas(d)
-        d$information <- c(d$information, list("Status" = status_code(data_shinemas)))
+        if(query == "data_agro"){d <- format_data_shinemas(d)}else{d <- d$data}
+        d <- list("data" = d, "Status" = status_code(data_shinemas))
         return(d)
       })
     }
@@ -181,21 +190,27 @@ shinemas = function(
       info <- data$information
     }else{  # Several pages : concatenate all dataframes into one
       D <- lapply(data, function(d){return(d$data)})
-      info <- lapply(data, function(d){return(d$information)})
+      info <- lapply(data, function(d){return(d$Status)})
     }
+    if(class(D) != "list"){D <- list(D)}
     d <- do.call(rbind.fill, D)
     info <- c(list("date" = Date, "filters" = filters), list("info" = info))
     
-    return(list("data" = D, "information" = info))
+    return(list("data" = d, "information" = info))
     }
   
+  
+  # Queries
   # query_type == "PPBstats_data_network_unipart_seed_lots" ----------
   if( query_type == "PPBstats_data_network_unipart_seed_lots"){
     
     data = get_data_from_shinemas(db_url, user, password, token, query = "data_network_unipart_seed_lots", filters)
     
+    colnames(data$data)[grep("project", colnames(data$data))] <- "project"
+    
     vec_fac = c("specie", "project", "seed_lot_parent", "seed_lot_child", "relation_type", "relation_year_start", "relation_year_end", "germplasm_parent", 
-                "location_parent", "year_parent", "germplasm_child", "location_child", "year_child", "species_parent", "project_parent", "germplasm_type_parent", 
+                "location_parent", "year_parent", "germplasm_child", "location_child", "year_child", "species_parent",
+                "project_parent", "germplasm_type_parent", 
                 "comments_parent", "species_child", "project_child", "germplasm_type_child", "comments_child")
     for(v in vec_fac){ data$data[,v] = as.factor(as.character(data$data[,v])) }
     
@@ -212,6 +227,7 @@ shinemas = function(
     data = get_data_from_shinemas(db_url, user, password, token, query = "data_agro", filters)
     
     colnames(data$data)[grep("seed_lot_child", colnames(data$data))] <- "seed_lot"
+    colnames(data$data)[grep("project", colnames(data$data))] <- "project"
     
     vec_fac = c("species", "project", "seed_lot", "seed_lot_parent", "location", "year", "germplasm", "block", "X", "Y")
     for(v in vec_fac){ data$data[,v] = as.factor(as.character(data$data[,v])) }
@@ -228,7 +244,10 @@ shinemas = function(
     
     data = get_data_from_shinemas(db_url, user, password, token, query = "data_agro_sr", filters)
     
-    vec_fac = c("specie", "project", "seed_lot", "location", "year", "germplasm", "block", "X", "Y", "expe_id", "group", "version")
+    colnames(data$data)[grep("seed_lot_child", colnames(data$data))] <- "seed_lot"
+    colnames(data$data)[grep("project", colnames(data$data))] <- "project"
+    
+    vec_fac = c("species", "project", "seed_lot", "seed_lot_parent", "location", "year", "germplasm", "block", "X", "Y", "expe_id", "group", "version")
     for(v in vec_fac){ data$data[,v] = as.factor(as.character(data$data[,v])) }
     
     vec_num = c("lat", "long")
@@ -241,7 +260,10 @@ shinemas = function(
     
     data = get_data_from_shinemas(db_url, user, password, token, query = "data_agro_ha", filters)
     
-    vec_fac = c("specie", "project", "seed_lot", "location", "year", "germplasm", "block", "X", "Y", "origin", "version")
+    colnames(data$data)[grep("seed_lot_child", colnames(data$data))] <- "seed_lot"
+    colnames(data$data)[grep("project", colnames(data$data))] <- "project"
+    
+    vec_fac = c("species", "project", "seed_lot", "seed_lot_parent", "location", "year", "germplasm", "block", "X", "Y", "origin")
     for(v in vec_fac){ data$data[,v] = as.factor(as.character(data$data[,v])) }
     
     vec_num = c("lat", "long")
